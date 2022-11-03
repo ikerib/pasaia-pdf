@@ -128,13 +128,13 @@ class DefaultController extends AbstractController
             $temp = "/tmp/" . md5(date('Y-m-d H:i:s:u')) ."/";
             $tempfile = 0;
             $files = [];
+            $total = count($fitxategiak);
 
-            $da = ['message' => 'kk'];
-            $frm = $this->createFormBuilder($da);
 
             /** @var UploadedFile $fitxategia */
-            foreach ($fitxategiak as $fitxategia)
+            foreach (array_reverse($fitxategiak) as $fitxategia)
             {
+                --$total;
                 if ($fitxategia->getMimeType() !== "application/pdf") {
                     $this->addFlash('error', 'Aukeratutako fitxategia ez da PDF bat');
                     return $this->redirectToRoute('app_pdf_ttiki');
@@ -143,47 +143,23 @@ class DefaultController extends AbstractController
                 ++$tempfile;
                 $tempFileName = "$tempfile.pdf";
                 $fitxategia->move($temp, $tempFileName);
-                $files[] = $temp.$tempFileName;
+                $files[$tempfile] = $temp.$tempFileName;
 
-                $frm->add("fitxategia$tempfile", TextType::class, [
-                    'attr' => [
-                        'class' => 'form-control col-md-6',
-
-                    ],
-                    'data' => $fitxategia->getClientOriginalName(),
-                    'disabled' => true
-                ]);
-
-//                $frm->add("fitxategia$tempfile", FileType::class, [
-//                    'data_class' => null,
-//                    'mapped' => false,
-//                    'attr' => [
-//                        'class' => 'form-control'
-//                    ]
-//                ]);
-                //$frm->get("fitxategia$tempfile")->setData($fitxategia->getClientOriginalName());
-                //$frm["fitxategia$tempfile"]->setData($f);
             }
 
+            $pdf = new Pdf($files);
+            $result = $pdf->cat()->saveAs($targetfile);
+            if ($result === false) {
+                $error = $pdf->getError();
 
+                $this->addFlash('error', $error);
+                return $this->redirectToRoute('app_pdf_elkartu');
+            }
 
-            return $this->render('default/elkartu2.html.twig', [
-                'form' => $frm->getForm()->createView()
-            ]);
+            $response = new BinaryFileResponse($targetfile);
+            $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT);
 
-//            $pdf = new Pdf($files);
-//            $result = $pdf->cat()->saveAs($targetfile);
-//            if ($result === false) {
-//                $error = $pdf->getError();
-//
-//                $this->addFlash('error', $error);
-//                return $this->redirectToRoute('app_pdf_elkartu');
-//            }
-//
-//            $response = new BinaryFileResponse($targetfile);
-//            $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT);
-//
-//            return $response;
+            return $response;
         }
 
         return $this->render('default/elkartu.html.twig', [
