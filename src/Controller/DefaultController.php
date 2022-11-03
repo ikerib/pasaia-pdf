@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\File;
@@ -14,6 +15,7 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\Validator\Constraints\Positive;
 
 class DefaultController extends AbstractController
 {
@@ -32,11 +34,23 @@ class DefaultController extends AbstractController
                 'attr' => [
                     'class' => 'form-control'
                 ],
-                'required' => true,
                 'constraints' => [
                     new \Symfony\Component\Validator\Constraints\File(),
 
-                ]
+                ],
+                'required' => true,
+            ])
+            ->add('resolution', NumberType::class, [
+                'attr' => [
+                    'class' => 'form-control',
+                    'style' => 'width: 200px'
+                ],
+                'constraints' => [
+                    new Positive(message: 'Resoluzioak positiboa izan behar du')
+                ],
+                'data' => 80,
+                'empty_data' => 80,
+                'required' => true
             ])
             ->add('Txikitu', SubmitType::class, [
                 'attr' => [
@@ -51,6 +65,7 @@ class DefaultController extends AbstractController
             // data is an array with "name", "email", and "message" keys
             $data = $form->getData();
             $fitxategia = $data['fitxategia'];
+            $resolution = $data['resolution'];
             if ($fitxategia->getMimeType() !== "application/pdf") {
                 $this->addFlash('error', 'Aukeratutako fitxategia ez da PDF bat');
                 return $this->redirectToRoute('app_pdf_ttiki');
@@ -60,7 +75,7 @@ class DefaultController extends AbstractController
             $target_file = $dest . preg_replace("/[^a-z0-9\_\-\.]/i", '', $fitxategia->getClientOriginalName());
 
 
-            $process = new Process(['/usr/local/bin/shrinkpdf.sh', $fitxategia->getRealPath(), $target_file , 80]);
+            $process = new Process(['/usr/local/bin/shrinkpdf.sh', $fitxategia->getRealPath(), $target_file , $resolution]);
             $process->run();
 
             // executes after the command finishes

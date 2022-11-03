@@ -5,7 +5,7 @@
             <h1>PDF fitxategia ttikitu</h1>
             <p class="fs-5 col-md-8">Funtzionalitate honen bitartez, igotako pdf fitxategia tamaña txikiago batetan deskargatu ahal izango duzu.</p>
 
-            <hr class="col-3 col-md-2 mb-5">
+            <hr class="col-3 col-md-2 mb-1">
 
             <div class="row g-5">
                 <div class="col-md-2"></div>
@@ -23,6 +23,11 @@
                         {{ form_label(form.fitxategia, 'Fitxategia', {'label_attr': {'class': 'form-label'}}) }}
                         {{ form_widget(form.fitxategia) }}
                         {{ form_errors(form.fitxategia) }}
+                        <p>&nbsp;</p>
+                        <p><strong>Resoluzioa: </strong></p>
+                        <p>Gero eta zenbaki handiagoa: Hobeto ikusiko da, baina fitxategiaren tamaña handiagoa izango da.</p>
+                        <p>Gero eta zenbaki txikiago: Okerrago ikusiko da, baina fitxategiaren tamaña txikiagoa izango da.</p>
+                        {{ form_row(form.resolution) }}
                     <hr>
 
                     {{ form_end(form) }}
