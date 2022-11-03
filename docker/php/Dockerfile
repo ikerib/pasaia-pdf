@@ -12,7 +12,7 @@ WORKDIR /usr/src/app
 
 # 3 Install Additional dependencies
 RUN apk update && apk add --no-cache \
-    build-base shadow vim curl bash  ghostscript \
+    build-base shadow vim curl bash ghostscript \
     zip libzip-dev \
     libjpeg-turbo-dev \
     libpng-dev \
@@ -22,6 +22,13 @@ RUN apk update && apk add --no-cache \
     aspell-dev \
     git\
     autoconf
+
+# pdftk
+RUN apk add openjdk8
+RUN wget https://gitlab.com/pdftk-java/pdftk/-/jobs/924565145/artifacts/raw/build/libs/pdftk-all.jar
+RUN mv pdftk-all.jar /usr/local/bin/pdftk.jar
+COPY --chmod=0755 ./docker/php/shrinkpdf.sh /usr/local/bin/shrinkpdf.sh
+COPY --chmod=0755 ./docker/php/pdftk /usr/local/bin/pdftk
 
 # 4 Add and Enable PHP-PDO Extenstions
 RUN docker-php-ext-install pdo pdo_mysql mysqli
@@ -38,23 +45,9 @@ RUN docker-php-ext-configure intl && docker-php-ext-install intl
 # DEBUG
 RUN pecl install xdebug && docker-php-ext-enable xdebug
 
-# ldap
-RUN apk add --update --no-cache \
-          libldap && \
-      # Build dependancy for ldap \
-      apk add --update --no-cache --virtual .docker-php-ldap-dependancies \
-          openldap-dev && \
-      docker-php-ext-configure ldap && \
-      docker-php-ext-install ldap && \
-      apk del .docker-php-ldap-dependancies && \
-      php -m;
-
 RUN pecl install -o -f redis apcu  \
 &&  rm -rf /tmp/pear \
 &&  docker-php-ext-enable redis apcu
-
-RUN apk --no-cache add nodejs yarn npm --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community
-
 
 # 5 Install PHP Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -76,19 +69,6 @@ RUN php bin/console cache:clear
 
 RUN mkdir -p /usr/src/app/public/uploads
 RUN chmod -R 777 /usr/src/app/public/uploads
-
-RUN rm -fr node_modules
-RUN yarn install
-
-RUN if [[ "$FOSJSDUMP" = "0"]] ; \
-    then \
-        echo "FOSJSROUTING DISABLED" ; \
-    else \
-        echo Argument is $FOSJSDUMP \
-        RUN php bin/console ckedit:install \
-        RUN php bin/console fos:js-routing:dump --format=json --target=public/js/fos_js_routes.json \
-        RUN php bin/console assets:install --symlink public \
-    ; fi
 
 RUN chown -R www-data:www-data /usr/src/app
 # 9 Change current user

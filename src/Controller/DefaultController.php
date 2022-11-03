@@ -2,11 +2,13 @@
 
 namespace App\Controller;
 
+use mikehaertl\pdftk\Pdf;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,7 +27,7 @@ class DefaultController extends AbstractController
         return $this->render('default/index.html.twig');
     }
 
-    #[Route('/pdfttiki', name: 'app_pdf_ttiki')]
+    #[Route('/ttiki', name: 'app_pdf_ttiki')]
     public function ttiki(Request $request): Response
     {
         $defaultData = ['message' => 'Aukeratu fitxategia'];
@@ -94,4 +96,71 @@ class DefaultController extends AbstractController
             'form' => $form->createView()
         ]);
     }
+
+    #[Route('/elkartu', name: 'app_pdf_elkartu')]
+    public function elkartu(Request $request): Response
+    {
+        $defaultData = ['message' => 'Aukeratu fitxategia'];
+        $form = $this->createFormBuilder($defaultData)
+            ->add('fitxategia', FileType::class, [
+                'attr' => [
+                    'class' => 'form-control'
+                ],
+                'data_class' => null,
+                'multiple' => true,
+                'required' => true,
+            ])
+
+            ->add('Txikitu', SubmitType::class, [
+                'attr' => [
+                    'class' => 'form-controle btn btn-primary mt-10'
+                ]
+            ])
+            ->getForm();
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $form->getData();
+            $fitxategiak = $data['fitxategia'];
+            $targetfile = "/usr/src/app/public/uploads/" . md5(date('Y-m-d H:i:s:u')) . ".pdf";
+            $temp = "/tmp/" . md5(date('Y-m-d H:i:s:u')) ."/";
+            $tempfile = 0;
+            $files = [];
+
+            /** @var UploadedFile $fitxategia */
+            foreach ($fitxategiak as $fitxategia)
+            {
+                if ($fitxategia->getMimeType() !== "application/pdf") {
+                    $this->addFlash('error', 'Aukeratutako fitxategia ez da PDF bat');
+                    return $this->redirectToRoute('app_pdf_ttiki');
+                }
+
+                ++$tempfile;
+                $tempFileName = "$tempfile.pdf";
+                $fitxategia->move($temp, $tempFileName);
+                $files[] = $temp.$tempFileName;
+            }
+            $pdf = new Pdf($files);
+            $result = $pdf->cat()->saveAs($targetfile);
+            if ($result === false) {
+                $error = $pdf->getError();
+
+                $this->addFlash('error', $error);
+                return $this->redirectToRoute('app_pdf_elkartu');
+            }
+//            $pdfresponse = $pdf->saveAs($targetfile);
+
+            $response = new BinaryFileResponse($targetfile);
+            $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT);
+
+            return $response;
+        }
+
+        return $this->render('default/elkartu.html.twig', [
+            'form' => $form->createView()
+        ]);
+    }
+
 }
