@@ -6,6 +6,7 @@ use mikehaertl\pdftk\Pdf;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -110,7 +111,6 @@ class DefaultController extends AbstractController
                 'multiple' => true,
                 'required' => true,
             ])
-
             ->add('Txikitu', SubmitType::class, [
                 'attr' => [
                     'class' => 'form-controle btn btn-primary mt-10'
@@ -129,6 +129,9 @@ class DefaultController extends AbstractController
             $tempfile = 0;
             $files = [];
 
+            $da = ['message' => 'kk'];
+            $frm = $this->createFormBuilder($da);
+
             /** @var UploadedFile $fitxategia */
             foreach ($fitxategiak as $fitxategia)
             {
@@ -141,21 +144,46 @@ class DefaultController extends AbstractController
                 $tempFileName = "$tempfile.pdf";
                 $fitxategia->move($temp, $tempFileName);
                 $files[] = $temp.$tempFileName;
+
+                $frm->add("fitxategia$tempfile", TextType::class, [
+                    'attr' => [
+                        'class' => 'form-control col-md-6',
+
+                    ],
+                    'data' => $fitxategia->getClientOriginalName(),
+                    'disabled' => true
+                ]);
+
+//                $frm->add("fitxategia$tempfile", FileType::class, [
+//                    'data_class' => null,
+//                    'mapped' => false,
+//                    'attr' => [
+//                        'class' => 'form-control'
+//                    ]
+//                ]);
+                //$frm->get("fitxategia$tempfile")->setData($fitxategia->getClientOriginalName());
+                //$frm["fitxategia$tempfile"]->setData($f);
             }
-            $pdf = new Pdf($files);
-            $result = $pdf->cat()->saveAs($targetfile);
-            if ($result === false) {
-                $error = $pdf->getError();
 
-                $this->addFlash('error', $error);
-                return $this->redirectToRoute('app_pdf_elkartu');
-            }
-//            $pdfresponse = $pdf->saveAs($targetfile);
 
-            $response = new BinaryFileResponse($targetfile);
-            $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT);
 
-            return $response;
+            return $this->render('default/elkartu2.html.twig', [
+                'form' => $frm->getForm()->createView()
+            ]);
+
+//            $pdf = new Pdf($files);
+//            $result = $pdf->cat()->saveAs($targetfile);
+//            if ($result === false) {
+//                $error = $pdf->getError();
+//
+//                $this->addFlash('error', $error);
+//                return $this->redirectToRoute('app_pdf_elkartu');
+//            }
+//
+//            $response = new BinaryFileResponse($targetfile);
+//            $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT);
+//
+//            return $response;
         }
 
         return $this->render('default/elkartu.html.twig', [
