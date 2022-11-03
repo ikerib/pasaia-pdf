@@ -1,0 +1,16 @@
+.git
+.idea
+.env.local
+.env.prod
+#node_modules
+var
+#vendor
+tmp
+public/uploads
+storage/framework/cache/**
+storage/framework/sessions/**
+storage/framework/views/**
+docker/nginx/ssl/
+/docker/uploads/
+/doc/
+!/.vscode/

@@ -1,0 +1,64 @@
+version: "3.7"
+services:
+  app:
+    container_name: pdfttiki_app
+    env_file: ./.env.local
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        - DOCKER_TIMEZONE=${DOCKER_TIMEZONE}
+        - USER_ID=${USER_ID}
+        - GROUP_ID=${GROUP_ID}
+        - FOSJSDUMP=${FOSJSDUMP}
+    user: "${USER_ID}:${GROUP_ID}"
+    volumes:
+      - ".:/usr/src/app"
+      - "./docker/php/conf/my-php.ini:/usr/local/etc/php/php.ini:ro"
+      - "./docker/php/conf/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini:ro"
+      - "./docker/uploads/:/usr/src/app/public/uploads"
+    working_dir: /usr/src/app
+
+  nginx:
+    container_name: pdfttiki_nginx
+    build:
+      context: ./
+      dockerfile: docker/nginx/Dockerfile
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro"
+      - "./docker/nginx/ssl/:/etc/nginx/ssl/"
+    volumes_from:
+      - app
+    working_dir: /usr/src/app
+
+###> doctrine/doctrine-bundle ###
+  database:
+    image: postgres:${POSTGRES_VERSION:-14}-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      # You should definitely change the password in production
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+    volumes:
+      - db-data:/var/lib/postgresql/data:rw
+      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
+      # - ./docker/db/data:/var/lib/postgresql/data:rw
+###< doctrine/doctrine-bundle ###
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.215.0.0/16
+
+volumes:
+###> doctrine/doctrine-bundle ###
+  db-data:
+###< doctrine/doctrine-bundle ###
