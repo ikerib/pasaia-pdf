@@ -11,3 +11,9 @@ PDF fitxategientzako hainbat erabilgarri:
     
 
 ![](/home/local/PASAIA/iibarguren/dev/www/pdfttiki/doc/pdfpasaia.png)
+
+
+Thanks to the invaluable work of
+https://github.com/mikehaertl/php-pdftk
+
+Martxan ipintzeko erabili docker-compose.prod.yml
