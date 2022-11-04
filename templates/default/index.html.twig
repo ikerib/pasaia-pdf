@@ -12,16 +12,22 @@
         <hr class="col-3 col-md-2 mb-5">
 
         <div class="row g-5">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <h2>Hainbat PDF elkartu</h2>
                 <p>2 PDF edo gehiago igo eta guztiak elkartuz PDF bakarra eskuratu.</p>
                 <a href="{{ path('app_pdf_elkartu') }}" class="btn btn-primary px-4">Elkartu</a>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-4">
+                <h2>Lehen PDFari bigarren bat gehitu</h2>
+                <p>Igotzen den lehen PDF fitxategiari bigarrena gehitu.</p>
+                <a href="{{ path('app_pdf_gehitu') }}" class="btn btn-primary px-4">Gehitu</a>
+            </div>
+
+            <div class="col-md-4">
                 <h2>PDF batetik hainbat pdf eskuratu</h2>
                 <p>PDF bat igo ondoren, orri bakoitzeko pdf bat eskuratu. Hau da, PDF batek 10 orri baditu, 10 PDF eskuratuko ditugu.</p>
-                <a href="{{ path('app_pdf_ttiki') }}" class="btn btn-primary px-4">Banatu</a>
+                <a href="{{ path('app_pdf_banatu') }}" class="btn btn-primary px-4">Banatu</a>
             </div>
         </div>
     </main>

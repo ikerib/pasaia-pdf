@@ -4,10 +4,12 @@ namespace App\Controller;
 
 use mikehaertl\pdftk\Pdf;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Finder\Finder;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -77,7 +79,6 @@ class DefaultController extends AbstractController
             $dest = "/usr/src/app/public/uploads/";
             $target_file = $dest . preg_replace("/[^a-z0-9\_\-\.]/i", '', $fitxategia->getClientOriginalName());
 
-
             $process = new Process(['/usr/local/bin/shrinkpdf.sh', $fitxategia->getRealPath(), $target_file , $resolution]);
             $process->run();
 
@@ -111,7 +112,7 @@ class DefaultController extends AbstractController
                 'multiple' => true,
                 'required' => true,
             ])
-            ->add('Txikitu', SubmitType::class, [
+            ->add('Elkartu', SubmitType::class, [
                 'attr' => [
                     'class' => 'form-controle btn btn-primary mt-10'
                 ]
@@ -158,6 +159,167 @@ class DefaultController extends AbstractController
 
             $response = new BinaryFileResponse($targetfile);
             $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT);
+
+            return $response;
+        }
+
+        return $this->render('default/elkartu.html.twig', [
+            'form' => $form->createView()
+        ]);
+    }
+
+    #[Route('/gehitu', name: 'app_pdf_gehitu')]
+    public function gehitu(Request $request): Response
+    {
+        $defaultDataGehitu = ['message' => 'Fitxategia gehitu'];
+        $form = $this->createFormBuilder($defaultDataGehitu)
+            ->add('fitxategia1', FileType::class, [
+                'attr' => [
+                    'class' => 'form-control'
+                ],
+                'data_class' => null,
+                'label' => '1º PDF ',
+                'multiple' => false,
+                'required' => true,
+            ])
+            ->add('fitxategia2', FileType::class, [
+                'attr' => [
+                    'class' => 'form-control'
+                ],
+                'data_class' => null,
+                'label' => '2º PDF ',
+                'multiple' => false,
+                'required' => true,
+            ])
+            ->add('Gehitu', SubmitType::class, [
+                'attr' => [
+                    'class' => 'form-controle btn btn-primary mt-10'
+                ]
+            ])
+            ->getForm();
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $form->getData();
+            $fic1 = $fitxategiak = $data['fitxategia1'];
+            $fic2 = $fitxategiak = $data['fitxategia2'];
+//            $orria= $fitxategiak = $data['orria'];
+
+            if ($fic1->getMimeType() !== "application/pdf") {
+                $this->addFlash('error', '1º PDF  fitxategia ez da PDF bat');
+                return $this->redirectToRoute('app_pdf_ttiki');
+            }
+
+            if ($fic1->getMimeType() !== "application/pdf") {
+                $this->addFlash('error', '2º PDF  fitxategia ez da PDF bat');
+                return $this->redirectToRoute('app_pdf_ttiki');
+            }
+
+
+            $temp = "/tmp/" . md5(date('Y-m-d H:i:s:u')) ."/";
+            $fic1->move($temp, 'fic1.pdf');
+            $tempfic1 = $temp . "fic1.pdf";
+            $fic2->move($temp, 'fic2.pdf');
+            $tempfic2 = $temp . "fic2.pdf";
+            $targetfile = "/usr/src/app/public/uploads/" . md5(date('Y-m-d H:i:s:u')) . ".pdf";
+
+            $pdf = new Pdf($tempfic1);
+//            $result = $pdf->attachFiles([$tempfic2],2);
+            $result = $pdf->addFile($tempfic2);
+            if ($result === false) {
+                $error = $pdf->getError();
+                $this->addFlash('error', $error);
+
+                return $this->redirectToRoute('app_pdf_gehitu');
+            }
+            $pdf->saveAs($targetfile);
+
+            $response = new BinaryFileResponse($targetfile);
+            $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT);
+
+            return $response;
+        }
+
+        return $this->render('default/gehitu.html.twig', [
+            'form' => $form->createView()
+        ]);
+    }
+
+    #[Route('/banatu', name: 'app_pdf_banatu')]
+    public function banatu(Request $request): \ZipArchive|Response
+    {
+        $defaultDataBanatu = ['message' => 'Aukeratu fitxategia banatzeko'];
+        $form = $this->createFormBuilder($defaultDataBanatu)
+            ->add('fitxategia', FileType::class, [
+                'attr' => [
+                    'class' => 'form-control'
+                ],
+                'data_class' => null,
+                'multiple' => false,
+                'required' => true,
+            ])
+            ->add('Banatu', SubmitType::class, [
+                'attr' => [
+                    'class' => 'form-controle btn btn-primary mt-10'
+                ]
+            ])
+            ->getForm();
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $form->getData();
+            $fitxategia = $data['fitxategia'];
+
+            $dest = "/usr/src/app/public/uploads/". md5(date('Y-m-d H:i:s:u'))."/";
+            $filename = preg_replace("/[^a-z0-9\_\-\.]/i", '', $fitxategia->getClientOriginalName());
+            $fitxategia->move($dest, $filename);
+            $target_file = $dest.$filename ;
+
+
+            $pdf = new Pdf($target_file);
+            $files = $pdf->burst($dest."pg_%04d.pdf");
+            if ($files === false) {
+                $error = $pdf->getError();
+                $this->addFlash('error', $error);
+                $this->redirectToRoute('app_pdf_banatu');
+            }
+
+            // new zip
+            $zip = new \ZipArchive();
+            $zipName = $dest.preg_replace("/[^a-z0-9\_\-\.]/i", '', preg_replace('/(.*)\\.[^\\.]*/', '$1', $fitxategia->getClientOriginalName())).".zip";
+            // get files
+            $finder = new Finder();
+            $finder->files()->name('pg_*')->in($dest);
+
+            // loop files
+            foreach ($finder as $file) {
+
+                // open zip
+                if ($zip->open($zipName, \ZipArchive::CREATE) !== true) {
+                    throw new FileException('Zip file could not be created/opened.');
+                }
+
+                // add to zip
+                $zip->addFile($file->getRealpath(), basename($file->getRealpath()));
+
+                // close zip
+                if(!$zip->close()) {
+                    throw new FileException('Zip file could not be closed.');
+                }
+            }
+
+
+//            return $zip;
+            $response = new Response(file_get_contents($zipName));
+            $response->headers->set('Content-Type', 'application/zip');
+            $response->headers->set('Content-Disposition', 'attachment;filename="' . $zipName . '"');
+            $response->headers->set('Content-length', filesize($zipName));
+
+            @unlink($zipName);
 
             return $response;
         }

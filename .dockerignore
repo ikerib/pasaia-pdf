@@ -11,6 +11,7 @@ storage/framework/cache/**
 storage/framework/sessions/**
 storage/framework/views/**
 docker/nginx/ssl/
+/docker/nginx/ssl/
 /docker/uploads/
 /doc/
 !/.vscode/
