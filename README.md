@@ -16,4 +16,4 @@ PDF fitxategientzako hainbat erabilgarri:
 Thanks to the invaluable work of
 https://github.com/mikehaertl/php-pdftk
 
-Martxan ipintzeko erabili docker-compose.prod.yml
+Martxan ipintzeko erabili `docker-compose.prod.yml` eta `.env.prod`

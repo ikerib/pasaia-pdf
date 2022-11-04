@@ -6,7 +6,6 @@ services:
     image: ikerib/pasaia_pdf:0.1
     volumes:
       - "./php/conf/my-php.ini:/usr/local/etc/php/php.ini:ro"
-      - "./php/conf/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini:ro"
     working_dir: /usr/src/app
 
   nginx:
