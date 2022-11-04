@@ -8,9 +8,7 @@ PDF fitxategientzako hainbat erabilgarri:
 - PDF bati bigarren PDF bat gehitu
 - PDF bat igota orri bakoitzeko PDF bat eskuratu
 
-    
-
-![](/home/local/PASAIA/iibarguren/dev/www/pdfttiki/doc/pdfpasaia.png)
+![](/home/local/PASAIA/iibarguren/dev/www/pdfttiki/doc/pdfpasaia.png "Pdfttiki")
 
 
 Thanks to the invaluable work of
