@@ -1,9 +1,8 @@
 #!/bin/bash
 
-APP = calendar
+APP = pasaia_app
 VERSION := $(shell cat ./VERSION)
-DOCKER_REPO_NGINX = ikerib/${APP}_nginx:${VERSION}
-DOCKER_REPO_APP = ikerib/${APP}_app:${VERSION}
+DOCKER_REPO_APP = ikerib/${APP}
 USER_ID = $(shell id -u)
 GROUP_ID= $(shell id -g)
 user==www-data
@@ -31,3 +30,8 @@ stop:
 
 ssh:
 	docker compose exec app zsh
+
+deploy:
+	docker build -t ${DOCKER_REPO_APP} .
+	docker tag ${DOCKER_REPO_APP} ${DOCKER_REPO_APP}:${VERSION}
+	docker push ${DOCKER_REPO_APP}:${VERSION}
