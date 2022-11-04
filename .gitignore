@@ -22,7 +22,6 @@ public/uploads
 docker/nginx/ssl
 docker/uploads
 /docker/nginx/ssl/
-/doc/
 
 ###> symfony/phpunit-bridge ###
 .phpunit.result.cache
