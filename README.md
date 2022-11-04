@@ -10,7 +10,7 @@ PDF fitxategientzako hainbat erabilgarri:
 
     
 
-![](/home/local/PASAIA/iibarguren/dev/www/pdfttiki/doc/pdfpasaia.png)
+![pdfttiki](doc/pdfpasaia.png)
 
 
 Thanks to the invaluable work of
