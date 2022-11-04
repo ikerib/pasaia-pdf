@@ -7,16 +7,13 @@ services:
       - "host.docker.internal:host-gateway"
     build:
       context: .
-      dockerfile: docker/php/Dockerfile
+      dockerfile: docker/php-prod/Dockerfile
       args:
         - DOCKER_TIMEZONE=${DOCKER_TIMEZONE}
-        - USER_ID=${USER_ID}
-        - GROUP_ID=${GROUP_ID}
-    user: "${USER_ID}:${GROUP_ID}"
     volumes:
       - ".:/usr/src/app"
-      - "./docker/php/conf/my-php.ini:/usr/local/etc/php/php.ini:ro"
-      - "./docker/php/conf/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini:ro"
+      - "./docker/php-prod/conf/my-php.ini:/usr/local/etc/php/php.ini:ro"
+      - "./docker/php-prod/conf/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini:ro"
       - "./docker/uploads/:/usr/src/app/public/uploads"
     working_dir: /usr/src/app
 
@@ -35,9 +32,3 @@ services:
     volumes_from:
       - app
     working_dir: /usr/src/app
-
-networks:
-  default:
-    ipam:
-      config:
-        - subnet: 172.215.0.0/16
